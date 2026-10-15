@@ -5,7 +5,7 @@ import pickle
 from dataclasses import dataclass
 
 LIMITE = 4096
-MARCA = '[EFECTO] Se llamo a print DURANTE la deserializacion.'
+MARCA = '[INESPERADO] Se llamo a print DURANTE la deserializacion.'
 
 
 @dataclass
@@ -65,7 +65,12 @@ def generar_entrada(version, caso):
         return b'{entrada rota'
     
     if version == 'vulnerable':
-        objeto = Personaje(**valores) if caso == 'legitimo' else EntradaPreparada()
+        objeto = (
+            Personaje(**valores)
+            if caso == 'legitimo'
+            else EntradaPreparada()
+        )
+
         return pickle.dumps(objeto, protocol=4)
     
     if caso == 'manipulado':
@@ -85,12 +90,15 @@ def generar_entrada(version, caso):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('version', choices=['vulnerable', 'mitigado'])
-    parser.add_argument('caso', choices=['legitimo', 'malformado', 'manipulado',
-                                       'invalido', 'texto', 'pickle'])
+    parser.add_argument(
+        'version', choices=['vulnerable', 'mitigado'])
+    parser.add_argument(
+        'caso', choices=['legitimo', 'malformado', 'manipulado', 'invalido', 'texto', 'pickle'])
+    
     args = parser.parse_args()
     if args.version == 'vulnerable' and args.caso not in {'legitimo', 'malformado', 'manipulado'}:
         parser.error('Para vulnerable: legitimo, malformado o manipulado.')
+        
     # El generador representa al emisor externo en este laboratorio autocontenido.
     # El importador recibe solo bytes; no recibe el nombre del caso.
     datos = generar_entrada(args.version, args.caso)
